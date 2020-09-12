@@ -1270,6 +1270,10 @@
 								"type": "string",
 								"description": "Specifies an optional friendly name for the custom remote service"
 							},
+							"matcher": {
+								"type": "string",
+								"description": "Specifies an optional matcher patten, eg. '^a.b.c(:[0-9]+)*$' "
+							},
 							"protocol": {
 								"type": "string",
 								"default": "https",

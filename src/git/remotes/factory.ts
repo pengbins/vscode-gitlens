@@ -10,17 +10,17 @@ import { GitLabRemote } from './gitlab';
 import { RemoteProvider } from './provider';
 
 export { RemoteProvider };
-export type RemoteProviders = [string | RegExp, (domain: string, path: string) => RemoteProvider][];
+export type RemoteProviders = [string | RegExp, RemotesConfig | null, (domain: string, path: string) => RemoteProvider][];
 
 const defaultProviders: RemoteProviders = [
-	['bitbucket.org', (domain: string, path: string) => new BitbucketRemote(domain, path)],
-	['github.com', (domain: string, path: string) => new GitHubRemote(domain, path)],
-	['gitlab.com', (domain: string, path: string) => new GitLabRemote(domain, path)],
-	[/\bdev\.azure\.com$/i, (domain: string, path: string) => new AzureDevOpsRemote(domain, path)],
-	[/\bbitbucket\b/i, (domain: string, path: string) => new BitbucketServerRemote(domain, path)],
-	[/\bgitlab\b/i, (domain: string, path: string) => new GitLabRemote(domain, path)],
+	['bitbucket.org', null, (domain: string, path: string) => new BitbucketRemote(domain, path)],
+	['github.com', null, (domain: string, path: string) => new GitHubRemote(domain, path)],
+	['gitlab.com', null, (domain: string, path: string) => new GitLabRemote(domain, path)],
+	[/\bdev\.azure\.com$/i, null, (domain: string, path: string) => new AzureDevOpsRemote(domain, path)],
+	[/\bbitbucket\b/i, null, (domain: string, path: string) => new BitbucketServerRemote(domain, path)],
+	[/\bgitlab\b/i, null, (domain: string, path: string) => new GitLabRemote(domain, path)],
 	[
-		/\bvisualstudio\.com$/i,
+		/\bvisualstudio\.com$/i, null,
 		(domain: string, path: string) => new AzureDevOpsRemote(domain, path, undefined, undefined, true)
 	]
 ];
@@ -33,12 +33,13 @@ export class RemoteProviderFactory {
 	static create(providers: RemoteProviders, domain: string, path: string): RemoteProvider | undefined {
 		try {
 			const key = domain.toLowerCase();
-			for (const [matcher, creator] of providers) {
+			for (const [matcher, rc, creator] of providers) {
 				if (
 					(typeof matcher === 'string' && matcher === key) ||
 					(typeof matcher !== 'string' && matcher.test(key))
 				) {
-					return creator(domain, path);
+					const remoteDomain = rc ? rc.domain : domain;
+					return creator(remoteDomain, path);
 				}
 			}
 
@@ -56,8 +57,8 @@ export class RemoteProviderFactory {
 			for (const rc of cfg) {
 				const provider = this.getCustomProvider(rc);
 				if (provider === undefined) continue;
-
-				providers.push([rc.domain.toLowerCase(), provider]);
+				const matcher = rc.matcher ? new RegExp(rc.matcher) : rc.domain.toLowerCase();
+				providers.push([matcher, rc, provider]);
 			}
 		}
 

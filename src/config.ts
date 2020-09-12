@@ -382,6 +382,7 @@ export interface RemotesConfig {
 	protocol?: string;
 	type: CustomRemoteType;
 	urls?: RemotesUrlsConfig;
+	matcher?: string;
 }
 
 export interface RemotesUrlsConfig {
